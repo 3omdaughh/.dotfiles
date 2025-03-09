@@ -1,0 +1,16 @@
+// To reset the sxhkd
+kill -10 $(pidof sxhkd)
+
+// To see keyboard key name
+xev -event keyboard
+
+// To connect to a wifi device 
+nmcli device wifi list
+
+then if (Not hidden) 
+	nmcli device wifi connect SSID_or_BSSID password password
+else 
+	nmcli device wifi connect SSID_or_BSSID password password hidden yes
+
+// To mount an external Hard disk 
+sudo ntfs-3g /dev/your_NTFS_partition /mnt/external

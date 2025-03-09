@@ -1,0 +1,2 @@
+xrandr
+xrandr --output 'Device Name' --auto --right-of eDP-1
