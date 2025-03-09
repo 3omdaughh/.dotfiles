@@ -1,0 +1,91 @@
+# General keybindings for programs 
+
+super + w
+	$BROWSER
+
+super + control + w
+	brave
+
+super + Return 
+	$TERMINAL
+
+super + s
+	$MUSIC_PLAYER
+
+super + f 
+	libreoffice cp/'grinding .xlsx'
+
+super + d
+	discord
+
+super + t
+	telegram-desktop
+
+super + v 
+	vlc
+
+super + r
+	rnote
+
+super + m 
+	komikku
+
+super + control + r
+	obs
+
+super + control + s
+	dmenu_run
+
+super + z
+	zathura
+######
+
+# Keybindings to ctrl audio
+
+XF86AudioMute
+	amixer set Master toggle  # toggle between mute and unmute
+
+XF86AudioLowerVolume
+	amixer set Master 5%-     # decrease current volume by 5%
+
+XF86AudioRaiseVolume
+	amixer set Master 5%+     # increase current volume by 5%
+
+XF86AudioMicMute
+	amixer set Capture toggle # toggle between mic mute and unmute
+
+#####
+
+# Keybindings to ctrl brightness 
+
+XF86MonBrightnessDown
+	brightnessctl s 5%-
+
+XF86MonBrightnessUp
+	brightnessctl s +5%
+
+#####
+
+# Screenshot keybinding
+
+Print
+	flameshot gui
+
+control + Print
+	flameshot gui -r | xclip -selection clipboard -t image/png
+
+#####
+
+# Keybindings to ctrl/monitor system 
+
+super + control + BackSpace
+	$HOME/bin/exit.sh
+
+super + control + b
+	$HOME/bin/show_battery.sh
+
+super + control + c
+	$HOME/bin/sys_statue.sh
+
+super + control + d
+	cal | dmenu -l 10
