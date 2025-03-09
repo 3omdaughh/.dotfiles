@@ -1,0 +1,42 @@
+filetype plugin on
+
+set number
+set relativenumber 
+set autoindent
+set smartindent
+
+colorscheme gruvbox 
+let g:gruvbox_contrast_dark = 'hard'  " Options: 'soft', 'medium', 'hard'
+set background=dark
+let g:gruvbox_invert_selection='0'
+let g:gruvbox_termcolors='256'
+let g:AutoPairsFlyMode=0
+let g:gruvbox_italic='1'
+syntax on "activates syntax highlighting among other things
+set termguicolors "True colors term support
+
+set incsearch "highlights as you search
+set ignorecase
+set smartcase
+
+set clipboard=unnamedplus
+
+set showcmd
+
+let mapleader = "."
+
+hi MyGroup cterm=bold
+match MyGroup /./
+
+" Yank (copy) to clipboard
+vnoremap <leader>y :w !xclip -selection clipboard<CR><CR>
+
+" Paste from clipboard
+nnoremap <leader>p :r !xclip -o -selection clipboard<CR>
+
+" auto closing bracket manual conf
+inoremap ( ()<Left>
+inoremap [ []<Left>
+inoremap { {}<Left>
+inoremap ' ''<Left>
+inoremap " ""<Left>
