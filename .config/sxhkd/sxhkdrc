@@ -15,6 +15,9 @@ super + s
 super + f 
 	libreoffice cp/'grinding .xlsx'
 
+super + control + f
+	libreoffice
+
 super + d
 	discord
 
