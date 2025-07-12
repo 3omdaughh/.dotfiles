@@ -40,3 +40,8 @@ inoremap [ []<Left>
 inoremap { {}<Left>
 inoremap ' ''<Left>
 inoremap " ""<Left>
+
+"Make Calcurse notes markdown compatible:
+autocmd BufRead,BufNewFile /tmp/calcurse* set filetype=markdown
+autocmd BufRead,BufNewFile ~/.calcurse/notes/* set filetype=markdown
+

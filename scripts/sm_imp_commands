@@ -14,3 +14,16 @@ else
 
 // To mount an external Hard disk 
 sudo ntfs-3g /dev/your_NTFS_partition /mnt/external
+
+// to code and compile arduino 
+	arduino-cli sketch new my_project
+	arduino-cli compile --fqbn arduino:avr:uno my_project
+	arduino-cli upload -p /dev/ttyUSB0 --fqbn arduino:avr:uno my_project
+// to monitor 
+	sudo arduino-cli monitor -p /dev/ttyACM0 -b arduino:avr:uno
+// to compile 
+	arduino-cli compile --fqbn arduino:avr:uno my_project
+	arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:avr:uno my_project
+	arduino-cli monitor -p /dev/ttyACM0 -b arduino:avr:uno
+// to code 
+	arduino-cli sketch new my_project
