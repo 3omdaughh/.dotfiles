@@ -33,4 +33,3 @@ if [[ "$1" == "--add" ]]; then
 else
     select_from_history
 fi
-

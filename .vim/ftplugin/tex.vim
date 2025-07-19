@@ -1,10 +1,14 @@
 vim9script 
 
+compiler tex
+
 def Compile()
 	w
 	cd %:p:h
-	silent !pdflatex %:p
+	silent make
 	cd -
+
+	cwindow
 	redraw!
 enddef
 
