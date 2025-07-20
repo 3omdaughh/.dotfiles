@@ -6,7 +6,7 @@ endif
 
 g:current_compiler = "latex"
 
-CompilerSet makeprg=pdflatex\ -interaction=nonstopmode\ %:p
+CompilerSet makeprg=pdflatex\ -interaction=nonstopmode\ -synctex=-1\ %:p
 
 CompilerSet errorformat=%E!\ LaTeX\ %trror:\ %m,
 	\%E!\ %m,

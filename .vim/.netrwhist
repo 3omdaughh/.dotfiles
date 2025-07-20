@@ -1,0 +1,12 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =9
+let g:netrw_dirhist_9='/home/omdaughh/.vim/compiler'
+let g:netrw_dirhist_8='/home/omdaughh/.vim'
+let g:netrw_dirhist_7='/home/omdaughh/.vim/compiler'
+let g:netrw_dirhist_6='/home/omdaughh/.vim'
+let g:netrw_dirhist_5='/home/omdaughh/playground/vi_tex'
+let g:netrw_dirhist_4='/home/omdaughh/playground/ToDoughh/src'
+let g:netrw_dirhist_3='/home/omdaughh/playground/ToDoughh'
+let g:netrw_dirhist_2='/home/omdaughh/playground'
+let g:netrw_dirhist_1='/home/omdaughh'
+let g:netrw_dirhist_0='/home/omdaughh/.vim'
