@@ -1,0 +1,57 @@
+set notification-error-bg       "#3c3836"
+set notification-error-fg       "#ebdbb2"
+set notification-warning-bg     "#3c3836"
+set notification-warning-fg     "#ebdbb2"
+set notification-bg             "#3c3836"
+set notification-fg             "#ebdbb2"
+
+set completion-bg              "#504945" # bg2
+set completion-fg              "#ebdbb2" # fg
+set completion-group-bg        "#3c3836" # bg1
+set completion-group-fg        "#928374" # gray
+set completion-highlight-bg    "#83a598" # bright:blue
+set completion-highlight-fg    "#504945" # bg2
+
+set index-bg                   "#504945" # bg2
+set index-fg                   "#ebdbb2" # fg
+set index-active-bg            "#83a598" # bright:blue
+set index-active-fg            "#504945" # bg2
+
+set inputbar-bg                "#1d2021" # bg
+set inputbar-fg                "#ebdbb2" # fg
+
+set statusbar-bg               "#504945" # bg2
+set statusbar-fg               "#ebdbb2" # fg
+
+set highlight-color            "#458588" # blue
+set highlight-active-color     "#d65d0e" # orange
+set highlight-transparency     "0"
+
+set default-bg                  "#1d2021" # bg
+set default-fg                  "#ebdbb2" # fg
+
+set render-loading		true
+set render-loading-bg           "#1d2021" # bg
+set render-loading-fg           "#ebdbb2" # fg
+
+# Recolor book content's color
+set recolor-lightcolor          "#1d2021" # bg
+set recolor-darkcolor           "#ebdbb2" # fg
+set recolor			"true"
+# set recolor-keephue
+
+set statusbar-h-padding 0
+set statusbar-v-padding 0
+set page-padding 1
+
+map u scroll half-up
+map d scroll half-down
+map D toggle_page_mode
+map r reload
+map R rotate
+map K zoom in
+map J zoom out
+map i recolor
+map p print
+
+set selection-clipboard clipboard
