@@ -13,7 +13,12 @@ def Compile()
 enddef
 
 def Openpdf()
-	silent !zathura '%:p:r'.pdf & disown
+	# silent !zathura '%:p:r'.pdf & disown
+	const opta = "--synctex-forward "
+	const optb = line(".") .. ":" .. col(".") .. ":" .. '%:p'
+	const optc = "-c ~/.config/zathura/synctex "
+	exec "silent !zathura '%:p:r'.pdf " .. optc .. opta .. optb .. "& disown"
+	redraw!
 enddef
 
 nnoremap <buffer> <leader>c <ScriptCmd>Compile()<LF>
