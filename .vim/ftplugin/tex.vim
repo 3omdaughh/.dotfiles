@@ -12,13 +12,19 @@ def Compile()
 	redraw!
 enddef
 
+def OnError(channelname: channel, msg: string)
+	echoerr "process has finished with error: " .. msg
+enddef
+
 def Openpdf()
-	# silent !zathura '%:p:r'.pdf & disown
-	const opta = "--synctex-forward "
-	const optb = line(".") .. ":" .. col(".") .. ":" .. '%:p'
-	const optc = "-c ~/.config/zathura/synctex "
-	exec "silent !zathura '%:p:r'.pdf " .. optc .. opta .. optb .. "& disown"
-	redraw!
+	const proc = "zathura"
+	const opta = "-c"
+	const optb = "~/.config/zathura/synctex"
+	const optc = expand('%:p:r') .. ".pdf"
+	const optd = "--synctex-forward"
+	const opte = line(".") .. ":" .. col(".") .. ":" .. expand('%:p')
+	const cmd = [proc, opta, optb, optc, optd, opte]
+	job_start(cmd, {"err_cb": OnError})
 enddef
 
 nnoremap <buffer> <leader>c <ScriptCmd>Compile()<LF>
