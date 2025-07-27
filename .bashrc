@@ -16,6 +16,12 @@ alias i='sudo pacman -S'
 alias u='sudo pacman -Syu'
 alias q='sudo pacman -Ss'
 
+## AUR 
+
+alias iy='yay -S'
+alias uy='yay -Syu'
+alias qy='yay -Ss'
+
 ## general
 
 alias b='acpi -b'
