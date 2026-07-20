@@ -1,0 +1,15 @@
+#
+# ~/.bash_profile
+#
+
+[[ -f ~/.bashrc ]] && . ~/.bashrc
+
+export WEB_BROWSER="firefox"
+export BROWSER="firefox"
+export MUSIC_PLAYER="spotify-launcher"
+export TERMINAL="foot"
+export TERM="foot"
+export EDITOR="vim"
+export MERGETOOL="vimdiff"
+
+[[ ! $DISPLAY && $(tty) = "/dev/tty1" ]]  && ~/.local/bin/startwl.sh 

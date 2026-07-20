@@ -1,0 +1,87 @@
+# General keybindings for programs 
+
+super + w
+	$BROWSER
+
+super + s
+	$MUSIC_PLAYER
+
+super + d
+    vesktop
+
+super + control + f
+	libreoffice
+
+super + t
+	Telegram
+
+super + v 
+	vlc
+
+super + m 
+	komikku
+
+super + control + r
+	obs
+
+super + z
+	zathura
+
+# Keybindings to ctrl audio
+XF86AudioMute
+	amixer set Master toggle  # toggle between mute and unmute
+
+XF86AudioLowerVolume
+	amixer set Master 5%-     # decrease current volume by 5%
+
+XF86AudioRaiseVolume
+	amixer set Master 5%+     # increase current volume by 5%
+
+#####
+
+# Keybindings to ctrl brightness 
+
+F11
+	brightnessctl s 5%-
+
+F12
+	brightnessctl s +5%
+
+#####
+
+# Screenshot keybinding
+
+Print
+	~/.local/bin/prtscr_cpy.sh
+
+control + Print
+	~/.local/bin/prtscr_sv.sh
+
+
+
+#####
+
+# Keybindings to ctrl/monitor system 
+
+super + control + BackSpace
+	~/.local/bin/exit.sh
+
+super + control + b
+	~/.local/bin/show_bat.sh
+
+super + control + d
+	cal | wmenu -f "JetBrainsMono Nerd Font 10" -l 7
+
+#####
+
+# USB drive menu: pick device -> open terminal at mount point or unmount
+
+super + u
+	~/.local/bin/usb-mount menu
+
+#####
+
+# Wi-Fi connection menu
+
+super + n
+	~/.local/bin/wifi-menu
