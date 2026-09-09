@@ -1,8 +1,0 @@
-burpsuite
-claude-desktop
-claude-desktop-debug
-pfetch
-seclists
-vesktop-bin
-yay
-yay-debug

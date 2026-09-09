@@ -1,4 +1,0 @@
-#!/bin/sh
-# Burp Suite crashes on JDK 26 (unsupported); force Java 21 LTS.
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
-exec /usr/bin/burpsuite "$@"
