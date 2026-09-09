@@ -1,0 +1,10 @@
+# editor / claude session state
+.claude/
+
+# backup and patch leftovers never belong in the repo
+*.bak
+*.bak-*
+*.orig
+*.rej
+*.log
+*.swp

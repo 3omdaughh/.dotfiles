@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# gdec — decrypt what genc made. Auto-unpacks .tar.gz.gpg archives.
+#   gdec secrets.txt.gpg      -> secrets.txt
+#   gdec notes.tar.gz.gpg     -> ./notes/
+#   gdec -c file.gpg          -> print to stdout, never touch disk
+set -euo pipefail
+
+TO_STDOUT=0
+while getopts "c" opt; do
+    case $opt in
+        c) TO_STDOUT=1 ;;
+        *) echo "usage: gdec [-c] FILE.gpg..." >&2; exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+[[ $# -gt 0 ]] || { echo "usage: gdec [-c] FILE.gpg..." >&2; exit 1; }
+
+for enc in "$@"; do
+    [[ -f $enc ]] || { echo "gdec: no such file: $enc" >&2; exit 1; }
+
+    if [[ $TO_STDOUT -eq 1 ]]; then
+        gpg --quiet --decrypt "$enc"
+        continue
+    fi
+
+    case "$enc" in
+        *.tar.gz.gpg)
+            dir=$(basename "$enc" .tar.gz.gpg)
+            [[ -e $dir ]] && { echo "gdec: $dir exists, refusing" >&2; exit 1; }
+            gpg --quiet --decrypt "$enc" | tar -xzf -
+            echo "decrypted -> $dir/"
+            ;;
+        *.gpg|*.asc)
+            out="${enc%.*}"
+            [[ -e $out ]] && { echo "gdec: $out exists, refusing" >&2; exit 1; }
+            gpg --quiet --output "$out" --decrypt "$enc"
+            echo "decrypted -> $out"
+            ;;
+        *)
+            echo "gdec: $enc is not .gpg/.asc; use -c to dump to stdout" >&2
+            exit 1
+            ;;
+    esac
+done

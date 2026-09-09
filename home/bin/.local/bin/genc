@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# genc — symmetric-encrypt files/dirs with a passphrase. No keys needed.
+#   genc secrets.txt          -> secrets.txt.gpg
+#   genc ~/notes/             -> notes.tar.gz.gpg
+#   genc -r you@mail.com f    -> public-key encrypt to a recipient instead
+# Decrypt with: gdec FILE.gpg
+set -euo pipefail
+
+RECIPIENTS=()
+while getopts "r:" opt; do
+    case $opt in
+        r) RECIPIENTS+=(--recipient "$OPTARG") ;;
+        *) echo "usage: genc [-r recipient] PATH..." >&2; exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+[[ $# -gt 0 ]] || { echo "usage: genc [-r recipient] PATH..." >&2; exit 1; }
+
+# AES256 + strong KDF for symmetric mode; ignored when -r is used.
+SYM_OPTS=(--symmetric --cipher-algo AES256 --s2k-mode 3
+          --s2k-digest-algo SHA512 --s2k-count 65011712)
+
+for target in "$@"; do
+    [[ -e $target ]] || { echo "genc: no such path: $target" >&2; exit 1; }
+
+    if [[ -d $target ]]; then
+        base=$(basename "${target%/}")
+        out="$base.tar.gz.gpg"
+        [[ -e $out ]] && { echo "genc: $out exists, refusing" >&2; exit 1; }
+        tar -czf - -C "$(dirname "${target%/}")" "$base" \
+            | if [[ ${#RECIPIENTS[@]} -gt 0 ]]; then
+                  gpg --encrypt "${RECIPIENTS[@]}" --output "$out"
+              else
+                  gpg "${SYM_OPTS[@]}" --output "$out"
+              fi
+    else
+        out="$target.gpg"
+        [[ -e $out ]] && { echo "genc: $out exists, refusing" >&2; exit 1; }
+        if [[ ${#RECIPIENTS[@]} -gt 0 ]]; then
+            gpg --encrypt "${RECIPIENTS[@]}" --output "$out" "$target"
+        else
+            gpg "${SYM_OPTS[@]}" --output "$out" "$target"
+        fi
+    fi
+    echo "encrypted -> $out"
+done

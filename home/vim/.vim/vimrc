@@ -1,0 +1,168 @@
+filetype plugin indent on
+
+set number
+set relativenumber
+set autoindent
+set smartindent
+set tabstop=4
+set shiftwidth=4
+set expandtab
+set softtabstop=4
+
+" gruvbox tunables MUST be set before colorscheme to take effect
+set termguicolors "True colors term support
+set background=dark
+let g:gruvbox_contrast_dark = 'hard'  " Options: 'soft', 'medium', 'hard'
+let g:gruvbox_invert_selection='0'
+let g:gruvbox_termcolors='256'
+let g:gruvbox_italic='1'
+let g:AutoPairsFlyMode=0
+colorscheme gruvbox
+syntax on "activates syntax highlighting among other things
+
+set incsearch "highlights as you search
+set hlsearch
+set ignorecase
+set smartcase
+
+set clipboard=unnamedplus
+
+set showcmd
+
+let mapleader = "."
+
+
+" Visual mode: copy selected text to wl-copy
+vnoremap <leader>y y:call system('wl-copy', @")<CR>
+
+" Paste from Wayland clipboard in normal mode
+nnoremap <leader>p :let @"=system('wl-paste --no-newline')<CR>p
+
+" Optional: integrate clipboard with Vim's registers for smoother usage
+if has('clipboard')
+    set clipboard=unnamedplus
+endif
+
+" auto closing bracket manual conf
+inoremap ( ()<Left>
+inoremap [ []<Left>
+inoremap { {}<Left>
+inoremap ' ''<Left>
+inoremap " ""<Left>
+
+" Setup for problem solving
+
+function! OpenCPLayout()
+	edit ~/Desktop/cp/out.txt
+	vsplit ~/Desktop/cp/prob.cpp
+	wincmd w
+	split ~/Desktop/cp/in.txt
+	wincmd h
+	vertical resize +14
+endfunction
+
+nnoremap <leader>cp :call OpenCPLayout()<CR>
+
+" minitree file explorer (plugin/minitree.vim)
+nnoremap <leader>n :MiniTreeToggle<CR>
+nnoremap <leader>N :MiniTreeFind<CR>
+
+" Controlling tabs in vim 
+nnoremap <leader>l :tabnext<CR>
+nnoremap <leader>h :tabprevious<CR>
+nnoremap <leader>q :tabclose<CR>
+nnoremap <leader>' :tabnew<CR>
+
+" Opening a terminal
+nnoremap <leader>th :horizontal terminal<CR>
+nnoremap <leader>tv :vert terminal<CR>
+
+" ===================================================================
+" LaTeX note-taking shortcuts (leader = '.', buffer-local to .tex)
+" Normal mode: drops you in insert at the right spot.
+" Visual mode: wraps the selection.
+" ===================================================================
+augroup latex_notes
+    autocmd!
+    autocmd FileType tex,plaintex,latex call s:LatexMaps()
+augroup END
+
+" generic environment inserter: appends lines below cursor, jumps inside
+function! s:LatexEnv(lines, offset) abort
+    let l:start = line('.')
+    call append(l:start, a:lines)
+    call cursor(l:start + a:offset, 1)
+    normal! $
+    startinsert
+endfunction
+
+function! s:LatexFigure() abort
+    let l:start = line('.')
+    call append(l:start, [
+        \ '\begin{figure}[h]',
+        \ '    \centering',
+        \ '    \includegraphics[width=0.8\textwidth]{}',
+        \ '    \caption{}',
+        \ '    \label{fig:}',
+        \ '\end{figure}'])
+    call cursor(l:start + 3, 1)
+    normal! $
+    startinsert
+endfunction
+
+function! s:LatexTable() abort
+    let l:start = line('.')
+    call append(l:start, [
+        \ '\begin{table}[h]',
+        \ '    \centering',
+        \ '    \begin{tabular}{|c|c|}',
+        \ '        \hline',
+        \ '         &  \\',
+        \ '        \hline',
+        \ '    \end{tabular}',
+        \ '    \caption{}',
+        \ '\end{table}'])
+    call cursor(l:start + 5, 9)
+    startinsert
+endfunction
+
+function! s:LatexMaps() abort
+    " --- inline text formatting ---
+    nnoremap <buffer> <leader>b i\textbf{}<Left>
+    vnoremap <buffer> <leader>b c\textbf{<C-r>"}<Esc>
+    nnoremap <buffer> <leader>i i\textit{}<Left>
+    vnoremap <buffer> <leader>i c\textit{<C-r>"}<Esc>
+    nnoremap <buffer> <leader>u i\underline{}<Left>
+    vnoremap <buffer> <leader>u c\underline{<C-r>"}<Esc>
+    nnoremap <buffer> <leader>e i\emph{}<Left>
+    vnoremap <buffer> <leader>e c\emph{<C-r>"}<Esc>
+    nnoremap <buffer> <leader>tt i\texttt{}<Left>
+    vnoremap <buffer> <leader>tt c\texttt{<C-r>"}<Esc>
+
+    " --- math ---
+    nnoremap <buffer> <leader>m i$$<Left>
+    vnoremap <buffer> <leader>m c$<C-r>"$<Esc>
+    nnoremap <buffer> <leader>M i\[  \]<Left><Left><Left>
+    nnoremap <buffer> <leader>fr i\frac{}{}<Left><Left><Left>
+
+    " --- sections ---
+    nnoremap <buffer> <leader>s i\section{}<Left>
+    nnoremap <buffer> <leader>S i\subsection{}<Left>
+    nnoremap <buffer> <leader>x i\subsubsection{}<Left>
+
+    " --- environments ---
+    nnoremap <buffer> <leader>it :call <SID>LatexEnv(['\begin{itemize}', '    \item ', '\end{itemize}'], 1)<CR>
+    nnoremap <buffer> <leader>en :call <SID>LatexEnv(['\begin{enumerate}', '    \item ', '\end{enumerate}'], 1)<CR>
+    nnoremap <buffer> <leader>eq :call <SID>LatexEnv(['\begin{equation}', '    ', '\end{equation}'], 1)<CR>
+    nnoremap <buffer> <leader>al :call <SID>LatexEnv(['\begin{align}', '    ', '\end{align}'], 1)<CR>
+    nnoremap <buffer> <leader>tb :call <SID>LatexTable()<CR>
+    nnoremap <buffer> <leader>im :call <SID>LatexFigure()<CR>
+
+endfunction
+
+"Make Calcurse notes markdown compatible:
+augroup calcurse_markdown
+    autocmd!
+    autocmd BufRead,BufNewFile /tmp/calcurse* set filetype=markdown
+    autocmd BufRead,BufNewFile ~/.calcurse/notes/* set filetype=markdown
+augroup END

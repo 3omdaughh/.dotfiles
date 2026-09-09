@@ -1,0 +1,22 @@
+diff --git a/config.def.h b/config.def.h
+index 100093e..4886e73 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -64,7 +64,15 @@ static const char unknown_str[] = "n/a";
+  * wifi_essid          WiFi ESSID                      interface name (wlan0)
+  * wifi_perc           WiFi signal in percent          interface name (wlan0)
+  */
++
++
+ static const struct arg args[] = {
+-	/* function format          argument */
+-	{ datetime, "%s",           "%F %T" },
++    /* function format                 argument */
++	{ run_command,  " VOL %s | ", "amixer get Master | awk -F'[][]' '/%/ { print $2; exit }'" },
++	{ battery_perc, "Bat: %s% | ", "BAT0" },
++	{ disk_perc,    "Disk: %s% | ", "/" },
++	{ ram_used,     "RAM: %s/", NULL },
++	{ ram_total,    "%s | ", NULL },
++	{ cpu_perc,     "CPU: %s% | ", NULL },
++	{ datetime,     "%s ", "%F %T" },
+ };

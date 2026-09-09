@@ -1,0 +1,50 @@
+[general]
+mode = viewer
+position = parent
+size = optimal
+decoration = no
+sigusr1 = reload
+app_id = swayimg
+
+[viewer]
+window = #111111
+transparency = grid
+scale = optimal
+keep_zoom = yes
+position = center
+fixed = yes
+antialiasing = yes
+slideshow = no
+slideshow_time = 3
+
+[list]
+order = alpha
+loop = yes
+recursive = no
+all = no
+
+[keybindings]
+q = exit
+Esc = exit
+
+h = prev_file
+j = next_file
+k = prev_file
+l = next_file
+
+gg = first_file
+G = last_file
+
+f = fullscreen
+w = zoom fit
++ = zoom +10
+- = zoom -10
+
+r = reload
+R = rotate_right
+L = rotate_left
+
+m = mode
+
+Space = next_file
+BackSpace = prev_file

@@ -1,0 +1,18 @@
+#!/bin/sh
+# Idle/sleep hook for the dwl session.
+#
+# swayidle holds a logind sleep inhibitor, so "before-sleep" completes before
+# the machine actually suspends: the lock is already up when it goes down, and
+# is therefore still up on resume. It also answers logind's Lock signal, so
+# `loginctl lock-session` works.
+#
+# Started from startwl.sh, so it comes up with the session. Any previous
+# instance is cleared first, so starting it by hand mid-session cannot leave
+# two daemons racing the same events after the next login.
+
+pkill -x -u "$(id -u)" swayidle 2>/dev/null
+sleep 0.2
+
+exec swayidle -w \
+    before-sleep "$HOME/.local/bin/lockscreen -f" \
+    lock         "$HOME/.local/bin/lockscreen -f"

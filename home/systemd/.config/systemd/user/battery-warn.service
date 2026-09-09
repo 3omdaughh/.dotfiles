@@ -1,0 +1,7 @@
+[Unit]
+Description=Low battery notification
+
+[Service]
+Type=oneshot
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=%t/bus
+ExecStart=%h/.local/bin/battery-warn

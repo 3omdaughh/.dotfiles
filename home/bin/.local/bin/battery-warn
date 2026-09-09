@@ -1,0 +1,25 @@
+#!/bin/sh
+# Warn when BAT0 <= threshold and discharging. Repeats each timer tick
+# until the charger is plugged in.
+BAT=/sys/class/power_supply/BAT0
+THRESH=${BATTERY_WARN_THRESHOLD:-20}
+CRIT=${BATTERY_CRIT_THRESHOLD:-10}
+
+read -r cap < "$BAT/capacity" || exit 0
+read -r status < "$BAT/status" || exit 0
+
+[ "$status" = "Discharging" ] || exit 0
+[ "$cap" -le "$THRESH" ] || exit 0
+
+if [ "$cap" -le "$CRIT" ]; then
+	urgency=critical
+	body="Battery critical: ${cap}%. Plug in now."
+else
+	urgency=critical
+	body="Battery low: ${cap}%. Plug in charger."
+fi
+
+exec notify-send -u "$urgency" -a battery \
+	-h string:x-canonical-private-synchronous:battery-warn \
+	-i battery-caution \
+	"Battery ${cap}%" "$body"

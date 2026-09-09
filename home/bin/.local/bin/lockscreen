@@ -1,0 +1,163 @@
+#!/bin/sh
+# Session lock for the dwl (Wayland) session.
+#
+# This is a SESSION LOCK, not the SDDM greeter. swaylock takes the
+# ext-session-lock-v1 protocol from dwl, which blanks and blocks every output
+# and refuses input until PAM authenticates you. The dwl session keeps running
+# untouched underneath: nothing is logged out, no new session is started.
+#
+# Usage:
+#   lockscreen        lock now, stay in the foreground
+#   lockscreen -f     lock and fork once the screen is actually locked
+#                     (used by lock-on-sleep.service, so that the lock is up
+#                      before the machine suspends)
+
+set -eu
+
+THEME=/usr/share/sddm/themes/wrench
+CONF="$THEME/theme.conf"
+FONT_FILE=/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Regular.ttf
+FONT_NAME="JetBrainsMono Nerd Font"
+
+daemonize=""
+case "${1:-}" in
+    -f|--daemonize) daemonize="-f" ;;
+    "") ;;
+    *) echo "usage: ${0##*/} [-f]" >&2; exit 2 ;;
+esac
+
+# ---------------------------------------------------------------------------
+# Find the session's Wayland socket. Needed because systemd runs this with an
+# almost empty environment when locking before suspend.
+# ---------------------------------------------------------------------------
+: "${XDG_RUNTIME_DIR:=/run/user/$(id -u)}"
+export XDG_RUNTIME_DIR
+
+if [ -z "${WAYLAND_DISPLAY:-}" ]; then
+    for sock in "$XDG_RUNTIME_DIR"/wayland-*; do
+        case "$sock" in *.lock) continue ;; esac
+        [ -S "$sock" ] || continue
+        WAYLAND_DISPLAY=${sock##*/}
+        export WAYLAND_DISPLAY
+        break
+    done
+fi
+
+if [ -z "${WAYLAND_DISPLAY:-}" ]; then
+    echo "${0##*/}: no wayland socket in $XDG_RUNTIME_DIR" >&2
+    exit 1
+fi
+
+# Never stack two lockers; a second one would fight for the lock surface.
+#
+# Zombies must not count. swhkd spawns keybinding commands and never wait()s
+# for them, so every unlock leaves a "[swaylock] <defunct>" entry behind, and
+# pgrep matches defunct processes exactly like live ones. Matching on pgrep
+# alone therefore blocks every lock after the first one.
+locker_is_running() {
+    for pid in $(pgrep -x -u "$(id -u)" swaylock 2>/dev/null); do
+        state=$(ps -o state= -p "$pid" 2>/dev/null | tr -d ' ')
+        case "$state" in
+            Z|"") continue ;;   # reaped, or already gone
+            *) return 0 ;;      # a real locker holds the session
+        esac
+    done
+    return 1
+}
+
+if locker_is_running; then
+    exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Palette, read from the SDDM theme so the lock screen and the greeter can
+# never drift apart. swaylock wants RRGGBB[AA] with no leading '#'.
+# ---------------------------------------------------------------------------
+cfg() {
+    val=$(sed -n "s/^$1=//p" "$CONF" 2>/dev/null | head -1)
+    [ -n "$val" ] || val=$2
+    printf '%s' "${val#\#}"
+}
+
+base=$(cfg colorBase 0a0a0b)
+border=$(cfg colorBorder 242428)
+text=$(cfg colorText e4e4e1)
+muted=$(cfg colorMuted 6e6e77)
+dim=$(cfg colorDim 43434a)
+accent=$(cfg colorAccent d8bf55)
+accentdim=$(cfg colorAccentDim 7d6e33)
+error=$(cfg colorError b5564a)
+
+# ---------------------------------------------------------------------------
+# Wallpaper: rebuild the greeter's composition (charcoal base, background at
+# 42%, grain at 5%) and stamp the current track in the top-left corner, where
+# the greeter puts its host/kernel block.
+#
+# Purely cosmetic. If anything here fails we still lock, just on flat colour.
+# ---------------------------------------------------------------------------
+image_args=""
+shot="$XDG_RUNTIME_DIR/wrench-lock.png"
+bg="$THEME/assets/background.png"
+grain="$THEME/assets/grain.png"
+
+if [ -r "$bg" ] && command -v magick >/dev/null 2>&1; then
+    track=$(playerctl -p spotify metadata --format '{{artist}} — {{title}}' 2>/dev/null || true)
+    state=$(playerctl -p spotify status 2>/dev/null || true)
+
+    size=$(magick identify -format '%wx%h' "$bg" 2>/dev/null || echo 1672x940)
+
+    set -- magick -size "$size" "xc:#$base"
+    set -- "$@" \( "$bg" -alpha set -channel A -evaluate multiply 0.42 +channel \) -composite
+    if [ -r "$grain" ]; then
+        set -- "$@" \( "$grain" -write mpr:g +delete -size "$size" tile:mpr:g \
+                       -alpha set -channel A -evaluate multiply 0.05 +channel \) -composite
+    fi
+
+    if [ -n "$track" ]; then
+        set -- "$@" -font "$FONT_FILE" \
+                    -fill "#$accent" -draw "rectangle 44,54 50,60" \
+                    -fill "#$muted" -pointsize 22 -annotate +64+62 "$track" \
+                    -fill "#$dim"   -pointsize 17 -annotate +64+92 \
+                        "$(printf '%s' "${state:-unknown}" | tr 'A-Z' 'a-z')"
+    fi
+
+    set -- "$@" -depth 8 "$shot"
+
+    if "$@" >/dev/null 2>&1; then
+        image_args="--image $shot --scaling fill"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Lock. Colours mirror the greeter: charcoal field, hairline ring, yellow only
+# while verifying, muted red on refusal.
+# ---------------------------------------------------------------------------
+# shellcheck disable=SC2086
+exec swaylock $daemonize $image_args \
+    --color "$base" \
+    --font "$FONT_NAME" \
+    --font-size 11 \
+    --indicator-radius 46 \
+    --indicator-thickness 2 \
+    --indicator-idle-visible \
+    --ignore-empty-password \
+    --show-failed-attempts \
+    --inside-color "${base}00" \
+    --inside-clear-color "${base}00" \
+    --inside-ver-color "${base}00" \
+    --inside-wrong-color "${base}00" \
+    --ring-color "$border" \
+    --ring-clear-color "$accentdim" \
+    --ring-ver-color "$accent" \
+    --ring-wrong-color "$error" \
+    --key-hl-color "$accent" \
+    --bs-hl-color "$error" \
+    --line-color "${base}00" \
+    --line-clear-color "${base}00" \
+    --line-ver-color "${base}00" \
+    --line-wrong-color "${base}00" \
+    --separator-color "${base}00" \
+    --text-color "$text" \
+    --text-clear-color "$muted" \
+    --text-ver-color "$accent" \
+    --text-wrong-color "$error"

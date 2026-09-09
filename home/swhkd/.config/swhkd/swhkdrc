@@ -1,0 +1,127 @@
+# General keybindings for programs 
+
+super + w
+	$BROWSER
+
+super + s
+	$MUSIC_PLAYER
+
+super + d
+    vesktop
+
+super + control + f
+	libreoffice
+
+super + t
+	Telegram
+
+super + v 
+	vlc
+
+super + m 
+	komikku
+
+super + control + r
+	obs
+
+super + z
+	zathura
+
+super + o
+    obsidian >/dev/null 2>&1
+
+# Keybindings to ctrl audio
+XF86AudioMute
+	amixer set Master toggle  # toggle between mute and unmute
+
+XF86AudioLowerVolume
+	amixer set Master 5%-     # decrease current volume by 5%
+
+XF86AudioRaiseVolume
+	amixer set Master 5%+     # increase current volume by 5%
+
+#####
+
+# Keybindings to ctrl brightness 
+
+F11
+	brightnessctl s 5%-
+
+F12
+	brightnessctl s +5%
+
+#####
+
+# Screenshot keybinding
+
+Print
+	~/.local/bin/prtscr_cpy.sh
+
+control + Print
+	~/.local/bin/prtscr_sv.sh
+
+
+
+#####
+
+# Keybindings to ctrl/monitor system 
+
+super + control + BackSpace
+	~/.local/bin/exit.sh
+
+super + control + b
+	~/.local/bin/show_bat.sh
+
+super + control + d
+	cal | wmenu -f "JetBrainsMono Nerd Font 10" -l 7
+
+#####
+
+# USB drive menu: pick device -> open terminal at mount point or unmount
+
+super + u
+	~/.local/bin/usb-mount menu
+
+#####
+
+# Wi-Fi connection menu
+
+super + n
+	~/.local/bin/wifi-menu
+
+#####
+
+# Session lock
+#
+# swaylock takes ext-session-lock-v1 from dwl: the desktop is blanked and all
+# input blocked until PAM authenticates. The dwl session keeps running
+# underneath, so this is a lock, not a logout and not the SDDM greeter.
+
+Scroll_Lock
+	~/.local/bin/lockscreen
+
+#####
+
+# Spotify
+#
+# These stay usable while the screen is locked: swhkd reads evdev as root, so
+# the compositor's input block does not hide keys from it, and swhks runs the
+# command inside the session where MPRIS lives.
+
+super + control + p
+	~/.local/bin/spotifyctl play-pause
+
+super + bracketright
+	~/.local/bin/spotifyctl next
+
+super + bracketleft
+	~/.local/bin/spotifyctl prev
+
+XF86AudioPlay
+	~/.local/bin/spotifyctl play-pause
+
+XF86AudioNext
+	~/.local/bin/spotifyctl next
+
+XF86AudioPrev
+	~/.local/bin/spotifyctl prev

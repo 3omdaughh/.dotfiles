@@ -1,0 +1,35 @@
+#!/bin/sh
+# Minimal MPRIS control, used by the swhkd bindings.
+#
+# Spotify is preferred; if it is not running, fall back to whatever player is.
+# Works while the session is locked because swhkd reads evdev as root and
+# hands the command to swhks, which runs inside the user session and so can
+# reach the session bus where MPRIS lives.
+
+set -eu
+
+pick_player() {
+    if playerctl -p spotify status >/dev/null 2>&1; then
+        echo spotify
+        return 0
+    fi
+    playerctl -l 2>/dev/null | head -1
+}
+
+player=$(pick_player)
+[ -n "$player" ] || exit 0
+
+case "${1:-}" in
+    play-pause|toggle) exec playerctl -p "$player" play-pause ;;
+    play)              exec playerctl -p "$player" play ;;
+    pause)             exec playerctl -p "$player" pause ;;
+    next)              exec playerctl -p "$player" next ;;
+    prev|previous)     exec playerctl -p "$player" previous ;;
+    status)            exec playerctl -p "$player" status ;;
+    track)             exec playerctl -p "$player" metadata \
+                            --format '{{artist}} — {{title}}' ;;
+    *)
+        echo "usage: ${0##*/} {play-pause|play|pause|next|prev|status|track}" >&2
+        exit 2
+        ;;
+esac

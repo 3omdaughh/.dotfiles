@@ -1,0 +1,15 @@
+# ~/.newsboat/config (or ~/.config/newsboat/config)
+# Color scheme matching 3omdaughh.log — dark bg, light fg, teal/cyan accents
+
+color background          white   black
+color listnormal          white   black
+color listfocus           cyan    black  bold
+color listnormal_unread   white   black  bold
+color listfocus_unread    cyan    black  bold
+color title                cyan   black  bold
+color info                 white  black
+color hint-key              cyan  black   bold
+color hint-keys-delimiter   white black
+color hint-separator        white black   bold
+color hint-description      white black
+color article               white black

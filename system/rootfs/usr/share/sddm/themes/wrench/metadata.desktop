@@ -1,0 +1,15 @@
+[SddmGreeterTheme]
+Name=Wrench
+Description=Minimal charcoal SDDM theme for a dwl/Wayland Arch workstation
+Author=omdaughh
+Copyright=(c) 2026 omdaughh
+License=MIT
+Type=sddm-theme
+Version=1.0
+Screenshot=preview.png
+MainScript=Main.qml
+ConfigFile=theme.conf
+TranslationsDirectory=translations
+Theme-Id=wrench
+Theme-API=2.0
+QtVersion=6

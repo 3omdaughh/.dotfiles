@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# gvault — edit an encrypted file in $EDITOR without leaving plaintext on disk.
+# Plaintext lives only in /run/user/$UID (tmpfs, RAM-backed) and is wiped on exit.
+#   gvault ~/.secrets/api-keys.gpg     # create or edit
+#   gvault -c ~/.secrets/api-keys.gpg  # cat to stdout
+set -euo pipefail
+
+CAT_ONLY=0
+while getopts "c" opt; do
+    case $opt in
+        c) CAT_ONLY=1 ;;
+        *) echo "usage: gvault [-c] FILE.gpg" >&2; exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+VAULT="${1:-}"
+[[ -n $VAULT ]] || { echo "usage: gvault [-c] FILE.gpg" >&2; exit 1; }
+
+SYM_OPTS=(--symmetric --cipher-algo AES256 --s2k-mode 3
+          --s2k-digest-algo SHA512 --s2k-count 65011712)
+
+if [[ $CAT_ONLY -eq 1 ]]; then
+    exec gpg --quiet --decrypt "$VAULT"
+fi
+
+RAMDIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+[[ -d $RAMDIR ]] || RAMDIR=$(mktemp -d)   # fallback: still better than $PWD
+TMP=$(mktemp "$RAMDIR/gvault.XXXXXXXX")
+chmod 600 "$TMP"
+trap 'shred -u "$TMP" 2>/dev/null || rm -f "$TMP"' EXIT INT TERM
+
+if [[ -f $VAULT ]]; then
+    # --yes: $TMP already exists (mktemp), gpg would otherwise refuse to write it
+    gpg --quiet --yes --output "$TMP" --decrypt "$VAULT"
+    BEFORE=$(sha256sum < "$TMP")
+else
+    mkdir -p "$(dirname "$VAULT")"
+    BEFORE="new"
+fi
+
+# Word-split so EDITOR="nvim -u NONE" works, like sudoedit/pass do.
+read -r -a ED <<< "${EDITOR:-vi}"
+"${ED[@]}" "$TMP"
+
+[[ -s $TMP ]] || { echo "gvault: empty result, not saving" >&2; exit 1; }
+if [[ "$(sha256sum < "$TMP")" == "$BEFORE" ]]; then
+    echo "gvault: unchanged"
+    exit 0
+fi
+
+# Write to a temp file first so a failed encrypt can't destroy the vault.
+gpg --batch --yes "${SYM_OPTS[@]}" --output "$VAULT.new" "$TMP"
+mv -f "$VAULT.new" "$VAULT"
+chmod 600 "$VAULT"
+echo "gvault: saved $VAULT"

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# gpg-init — create a modern GPG identity with sane defaults.
+# Primary key: ed25519, certify-only, no expiry.
+# Subkeys: sign + encrypt + auth (cv25519/ed25519), 2y expiry (rotatable).
+set -euo pipefail
+
+NAME="${1:-}"
+EMAIL="${2:-}"
+EXPIRE="${GPG_SUBKEY_EXPIRE:-2y}"
+
+if [[ -z "$NAME" || -z "$EMAIL" ]]; then
+    echo "usage: gpg-init \"Full Name\" email@example.com" >&2
+    exit 1
+fi
+
+echo ">> creating certify-only primary key (ed25519, no expiry)"
+gpg --batch --quick-generate-key "$NAME <$EMAIL>" ed25519 cert never
+
+FPR=$(gpg --list-secret-keys --with-colons "$EMAIL" \
+      | awk -F: '/^fpr:/ {print $10; exit}')
+echo ">> primary fingerprint: $FPR"
+
+for cap in sign encr auth; do
+    alg=ed25519; [[ $cap == encr ]] && alg=cv25519
+    echo ">> adding $cap subkey ($alg, expires $EXPIRE)"
+    gpg --batch --quick-add-key "$FPR" "$alg" "$cap" "$EXPIRE"
+done
+
+echo ">> done. keys:"
+gpg --list-secret-keys --keyid-format=long "$FPR"
+cat <<MSG
+
+Next steps:
+  gpg-backup                 # export keys + revocation cert, encrypted
+  git config --global user.signingkey $FPR
+  git config --global commit.gpgsign true
+MSG

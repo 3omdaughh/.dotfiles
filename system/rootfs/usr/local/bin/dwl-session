@@ -1,0 +1,12 @@
+#!/bin/sh
+# Launch dwl for a display-manager session.
+#
+# SDDM execs this instead of bare `dwl` so that the session gets the same
+# startup as a tty login: swaybg, mako, swhkd, slstatus and usb-mount.
+# $HOME is resolved at runtime, so this stays correct for any user.
+
+if [ -x "$HOME/.local/bin/startwl.sh" ]; then
+    exec "$HOME/.local/bin/startwl.sh"
+fi
+
+exec dwl

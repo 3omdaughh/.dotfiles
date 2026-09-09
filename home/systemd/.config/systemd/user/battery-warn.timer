@@ -1,0 +1,11 @@
+[Unit]
+Description=Poll battery level every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+AccuracySec=30s
+Unit=battery-warn.service
+
+[Install]
+WantedBy=timers.target

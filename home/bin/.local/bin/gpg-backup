@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# gpg-backup — export everything needed to restore a GPG identity, encrypted.
+# Bundles: secret keys, public keys, ownertrust, revocation certs.
+# Output: gpg-backup-<date>.tar.gz.gpg (symmetric, own passphrase).
+#   gpg-backup                  # all secret keys
+#   gpg-backup you@mail.com     # just that identity
+set -euo pipefail
+
+SELECTOR="${1:---all}"
+STAMP=$(date +%Y%m%d)
+OUT="${GPG_BACKUP_DIR:-$PWD}/gpg-backup-$STAMP.tar.gz.gpg"
+[[ -e $OUT ]] && { echo "gpg-backup: $OUT exists, refusing" >&2; exit 1; }
+
+RAMDIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+TMPROOT=$(mktemp -d "$RAMDIR/gpgbk.XXXXXXXX")
+trap 'rm -rf "$TMPROOT"' EXIT INT TERM
+chmod 700 "$TMPROOT"
+# Everything lives under one named dir so the archive unpacks into it,
+# not into whatever directory you happen to be standing in.
+NAME="gpg-backup-$STAMP"
+WORK="$TMPROOT/$NAME"
+mkdir -p "$WORK"
+
+if [[ $SELECTOR == "--all" ]]; then
+    gpg --armor --export-secret-keys       > "$WORK/secret-keys.asc"
+    gpg --armor --export                   > "$WORK/public-keys.asc"
+else
+    gpg --armor --export-secret-keys "$SELECTOR" > "$WORK/secret-keys.asc"
+    gpg --armor --export "$SELECTOR"             > "$WORK/public-keys.asc"
+fi
+gpg --export-ownertrust > "$WORK/ownertrust.txt"
+
+[[ -s $WORK/secret-keys.asc ]] || { echo "gpg-backup: no secret keys exported" >&2; exit 1; }
+
+# Revocation certs GnuPG auto-generated at key creation — critical to keep.
+REVDIR="${GNUPGHOME:-$HOME/.gnupg}/openpgp-revocs.d"
+[[ -d $REVDIR ]] && cp -a "$REVDIR" "$WORK/openpgp-revocs.d"
+
+cat > "$WORK/RESTORE.txt" <<'MSG'
+Restore on a new machine:
+
+  gpg --import public-keys.asc
+  gpg --import secret-keys.asc
+  gpg --import-ownertrust ownertrust.txt
+  gpg --edit-key <your-email>   # then: trust -> 5 -> quit
+
+openpgp-revocs.d/ holds pre-made revocation certificates. If a key is ever
+compromised or lost:  gpg --import openpgp-revocs.d/<FPR>.rev
+then publish the revoked key to a keyserver.
+MSG
+
+tar -czf - -C "$TMPROOT" "$NAME" | gpg --symmetric --cipher-algo AES256 \
+    --s2k-mode 3 --s2k-digest-algo SHA512 --s2k-count 65011712 \
+    --output "$OUT"
+
+chmod 600 "$OUT"
+echo "backup -> $OUT"
+echo "store this off-machine (USB / offline drive). Passphrase is the only key."
