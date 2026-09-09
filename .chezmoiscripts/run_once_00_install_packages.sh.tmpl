@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -eu
-doas pacman -S --needed --noconfirm - < {{ .chezmoi.sourceDir }}/packages/pacman.txt
-command -v yay >/dev/null || { doas pacman -S --needed --noconfirm base-devel git
-  git clone https://aur.archlinux.org/yay.git /tmp/yay && cd /tmp/yay && makepkg -si --noconfirm; }
-yay -S --needed --noconfirm - < {{ .chezmoi.sourceDir }}/packages/aur.txt
