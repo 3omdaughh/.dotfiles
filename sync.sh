@@ -73,12 +73,16 @@ pin() {  # pin <VAR> <dir>
 pin DWL_COMMIT      "$SRC_DIR/dwl"
 pin SLSTATUS_COMMIT "$SRC_DIR/slstatus"
 pin SWHKD_COMMIT    "$SRC_DIR/swhkd"
+pin NNN_COMMIT      "$SRC_DIR/nnn"
 if [ -d "$SRC_DIR/dwl/.git" ]; then
     git -C "$SRC_DIR/dwl" diff HEAD > src/dwl/dwl.patch
     cp "$SRC_DIR/dwl/drwl.h" src/dwl/drwl.h
 fi
 if [ -d "$SRC_DIR/slstatus/.git" ]; then
     git -C "$SRC_DIR/slstatus" diff HEAD > src/slstatus/slstatus.patch
+fi
+if [ -d "$SRC_DIR/nnn/.git" ]; then
+    git -C "$SRC_DIR/nnn" diff HEAD > src/nnn/nnn.patch
 fi
 grep COMMIT src/sources.conf | sed 's/^/  /'
 

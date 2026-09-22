@@ -227,6 +227,28 @@ step_sources() {
         as_root install -Dm755 "$d/target/release/swhks" /usr/bin/swhks
         [ -f /etc/swhkd/swhkdrc ] || as_root install -Dm644 /dev/null /etc/swhkd/swhkdrc
     fi
+
+    # -- nnn: file manager. Arch's own package is built without nerd-font icons
+    #    or the git status column, so rebuild Arch's PKGBUILD with those make
+    #    flags added (src/nnn/nnn.patch) and install the result with pacman.
+    #    The patch also sets pkgrel=99 so `pacman -Syu` will not quietly swap
+    #    this build for the plain repo one.
+    if built nnn; then echo "nnn: installed, skipping"; else
+        local d="$SRC_DIR/nnn"
+        if fetch_src "$d" "$NNN_REPO" "$NNN_COMMIT"; then
+            apply_patch "$d" "$DOTFILES/src/nnn/nnn.patch"
+        fi
+        # upstream signs the release tarball; the keys ship inside the clone
+        run gpg --quiet --import "$d"/keys/pgp/*.asc
+        run_in "$d" makepkg -sf --noconfirm
+        # nnn-[0-9]* so the nnn-debug package is not installed too
+        as_root pacman -U --noconfirm "$d"/nnn-[0-9]*.pkg.tar.zst
+        # Plugins ship inside the package. Copy with `/.` so the dotfiles go
+        # too: .nnn-plugin-helper is sourced by nearly every plugin, and
+        # .iconlookup is what draws icons inside directory previews.
+        run mkdir -p "$HOME/.config/nnn/plugins"
+        run cp -a /usr/share/nnn/plugins/. "$HOME/.config/nnn/plugins/"
+    fi
 }
 
 step_services() {

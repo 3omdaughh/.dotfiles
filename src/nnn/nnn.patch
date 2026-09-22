@@ -1,0 +1,22 @@
+diff --git a/PKGBUILD b/PKGBUILD
+index ce97f72..b701f9f 100644
+--- a/PKGBUILD
++++ b/PKGBUILD
+@@ -6,7 +6,7 @@
+ 
+ pkgname=nnn
+ pkgver=5.3
+-pkgrel=1
++pkgrel=99
+ pkgdesc="The fastest terminal file manager ever written."
+ arch=('x86_64')
+ depends=('bash' 'glibc' 'ncurses' 'readline' 'sed' 'hicolor-icon-theme')
+@@ -36,7 +36,7 @@ prepare() {
+ 
+ build() {
+     cd "${pkgname}-${pkgver}"
+-    make O_NORL=0
++    make O_NORL=0 O_NERD=1 O_GITSTATUS=1
+ }
+ 
+ package() {

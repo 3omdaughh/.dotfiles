@@ -2,7 +2,7 @@
 
 Everything needed to turn a fresh Arch Linux install into this machine:
 the configs, the package list, the three programs built from source
-(dwl, slstatus, swhkd), the SDDM theme, and the system files under `/etc`.
+(dwl, slstatus, swhkd, nnn), the SDDM theme, and the system files under `/etc`.
 
 Two tools, nothing else: **git** stores it, **GNU Stow** links it into place.
 
@@ -31,6 +31,8 @@ how it works, and how to keep it current.
 │   ├── foot/.config/foot/foot.ini
 │   ├── swhkd/.config/swhkd/swhkdrc keybindings
 │   ├── mako/  zathura/  fastfetch/  htop/  newsboat/  swayimg/  glow/
+│   ├── nnn/.config/nnn/opener.sh   what nnn opens each file type with
+│   ├── tmux/.tmux.conf
 │   ├── vim/.vim/…      git/.gitconfig      irssi/.irssi/…
 │   ├── systemd/.config/systemd/user/battery-warn.{service,timer}
 │   ├── xdg/.config/mimeapps.list, xdg-desktop-portal/portals.conf
@@ -54,7 +56,8 @@ how it works, and how to keep it current.
     ├── sources.conf    repo URL + pinned commit for each one
     ├── dwl/dwl.patch   your changes to dwl (bar, gaps, XWayland, keybinds)
     ├── dwl/drwl.h      new file the bar patch needs
-    └── slstatus/slstatus.patch
+    ├── slstatus/slstatus.patch
+    └── nnn/nnn.patch   rebuilds Arch's nnn with icons + git status
 ```
 
 Three kinds of content live here, and they are maintained differently:
@@ -145,7 +148,7 @@ Total time is dominated by package downloads and building yay and swhkd
 | `aur` | `yay -S --needed` everything in `packages/aur.txt` | wlroots0.19 comes from here and dwl needs it to build. |
 | `stow` | Backs up conflicting skel files, then `stow -R` all `home/*` | Configs and `~/.local/bin` scripts in place before the session tries to use them. |
 | `system` | Copies `system/rootfs/**` to `/` with the same modes | doas.conf, SDDM config and theme, `dwl-session`. |
-| `sources` | Clones, patches, builds and installs dwl, slstatus, swhkd | Needs base-devel, wlroots, rustup from earlier steps. |
+| `sources` | Clones, patches, builds and installs dwl, slstatus, swhkd, nnn | Needs base-devel, wlroots, rustup from earlier steps. |
 | `services` | `systemctl enable` system and user units | sddm, NetworkManager, libvirtd, pipewire, battery-warn.timer. |
 | `groups` | `usermod -aG` wheel, libvirt | Takes effect at next login. |
 
@@ -305,8 +308,8 @@ list: add it to `EXCLUDE`.
 
 ## 6. Programs built from source
 
-dwl, slstatus and swhkd are not packages. Your customised versions are
-reproduced from three things per program, all in `src/`:
+dwl, slstatus, swhkd and nnn are not stock packages. Your customised
+versions are reproduced from three things per program, all in `src/`:
 
 - an **upstream repo URL** and a **pinned commit** in `sources.conf`
 - a **patch** = `git diff HEAD` of your working tree against that commit
@@ -316,6 +319,15 @@ reproduced from three things per program, all in `src/`:
 new files, applies the patch, runs `make`, and installs as root. For swhkd
 it installs the two binaries by hand (with the setuid bit the daemon needs)
 because upstream's `make install` hard-codes `sudo`.
+
+nnn is the odd one out: it *is* in the Arch repos, but the repo build has
+no nerd-font icons and no git status column, both of which are compile-time
+flags. So the pinned repo is Arch's **packaging** repo rather than upstream,
+`nnn.patch` adds the flags to the PKGBUILD, and the step runs `makepkg` and
+installs the resulting package with `pacman -U` — it stays a tracked package
+instead of loose files in `/usr/local`. The patch also sets `pkgrel=99` so a
+later `pacman -Syu` will not replace it with the plain repo build; when a new
+nnn release lands, re-pin and rebuild to pick it up.
 
 The clones live in `~/Desktop/src/<name>` — the same place they are now —
 so on this machine the script sees your existing, uncommitted working trees
