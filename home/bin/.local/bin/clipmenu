@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+#
+# clipmenu — keep the last MAX_ENTRIES clipboard texts and pick one with wmenu.
+#
+# Usage:
+#   clipmenu daemon   watch the clipboard and record every text copy
+#                     (started from startwl.sh; a second instance exits)
+#   clipmenu store    record stdin as the newest entry (used by the daemon)
+#   clipmenu [menu]   show the history in wmenu; Enter copies the chosen
+#                     entry back to the clipboard and moves it to the top
+#   clipmenu clear    wipe the history
+#
+# History lives in $HIST, newest first, one entry per line. Entries are
+# base64-encoded so multi-line text survives the line-based format. Copies
+# flagged by password managers (x-kde-passwordManagerHint) and whitespace-only
+# copies are not recorded.
+
+set -u
+
+MAX_ENTRIES=10
+PREVIEW_CHARS=80
+WMENU_FONT="JetBrainsMono Nerd Font 10"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/clipmenu"
+HIST="$DATA_DIR/history"
+LOCK="$DATA_DIR/history.lock"
+DAEMON_LOCK="${XDG_RUNTIME_DIR:-/tmp}/clipmenu-daemon.lock"
+
+umask 077
+mkdir -p "$DATA_DIR"
+touch "$HIST"
+
+store() { # store [--trusted]: --trusted skips the password-manager check
+    local tmp enc
+    tmp=$(mktemp "$DATA_DIR/in.XXXXXX") || return 1
+    cat >"$tmp"
+    if ! grep -q '[^[:space:]]' "$tmp" ||
+        { [ "${1:-}" != --trusted ] &&
+            wl-paste --list-types 2>/dev/null | grep -qx 'x-kde-passwordManagerHint'; }; then
+        rm -f "$tmp"
+        return 0
+    fi
+    enc=$(base64 -w0 <"$tmp")
+    rm -f "$tmp"
+    (
+        flock 9
+        { printf '%s\n' "$enc"; grep -vxF -- "$enc" "$HIST"; } |
+            head -n "$MAX_ENTRIES" >"$HIST.new" && mv -f "$HIST.new" "$HIST"
+    ) 9>"$LOCK"
+}
+
+daemon() {
+    exec 8>"$DAEMON_LOCK"
+    flock -n 8 || exit 0
+    # wl-paste re-runs "clipmenu store" with the new text on stdin per copy
+    exec wl-paste --type text --watch "$0" store
+}
+
+menu() {
+    local choice n enc text
+    [ -s "$HIST" ] || { notify-send -a clipmenu "Clipboard" "History is empty"; exit 0; }
+    choice=$(
+        n=0
+        while IFS= read -r enc; do
+            n=$((n + 1))
+            text=$(printf '%s' "$enc" | base64 -d)
+            text=${text//$'\n'/↵}
+            text=${text//$'\t'/ }
+            printf '%d: %s\n' "$n" "${text:0:PREVIEW_CHARS}"
+        done <"$HIST" |
+            wmenu -i -f "$WMENU_FONT" -l "$MAX_ENTRIES" -p "clipboard"
+    ) || exit 0
+    n=${choice%%:*}
+    case $n in '' | *[!0-9]*) exit 0 ;; esac
+    enc=$(sed -n "${n}p" "$HIST")
+    [ -n "$enc" ] || exit 0
+    # store first: wl-copy forks to serve the selection, and the daemon's own
+    # store of the same text is then a no-op dedupe
+    printf '%s' "$enc" | base64 -d | store --trusted
+    printf '%s' "$enc" | base64 -d | wl-copy
+}
+
+case ${1:-menu} in
+    daemon) daemon ;;
+    store) store ;;
+    menu) menu ;;
+    clear) : >"$HIST" ;;
+    *) echo "usage: ${0##*/} [menu|daemon|store|clear]" >&2; exit 2 ;;
+esac

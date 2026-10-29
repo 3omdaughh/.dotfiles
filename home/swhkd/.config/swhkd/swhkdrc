@@ -91,6 +91,14 @@ super + n
 
 #####
 
+# Clipboard history: last 10 copies in wmenu, Enter re-copies and moves to top.
+# History is recorded by "clipmenu daemon", started from startwl.sh.
+
+super + c
+	~/.local/bin/clipmenu
+
+#####
+
 # Session lock
 #
 # swaylock takes ext-session-lock-v1 from dwl: the desktop is blanked and all
